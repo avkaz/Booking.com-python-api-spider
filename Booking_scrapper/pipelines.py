@@ -2,7 +2,7 @@ from itemadapter import ItemAdapter
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .models import create_table, Hotel, PriceItem
+from .models import create_table, Hotel, PriceItem, Dates
 
 class BookingScrapperPipeline:
     def process_item(self, item, spider):
@@ -64,13 +64,33 @@ class SaveHotelsToSQLite:
     def process_item(self, item, spider):
         session = self.Session()
 
+        # Check if there is the same datecode in db already
+        snapshot_date_str = datetime.now().strftime('%Y-%m-%d')
+        snapshot_date = datetime.strptime(snapshot_date_str, '%Y-%m-%d').date()
+        date_code_str = f"{item['check_in_date'].strftime('%d%m%y')}{item['check_out_date'].strftime('%d%m%y')}{snapshot_date.strftime('%d%m%y')}"
+        date_code_int = int(date_code_str)
+
+        query = session.query(Dates).filter_by(
+            date_code=date_code_int
+        )
+        existing_dates = query.first()
+        if existing_dates:
+            date_code = existing_dates.date_code
+        else:
+            # create new dates
+            date_item = Dates(
+                snapshot_date=snapshot_date,
+                check_in_date=item['check_in_date'],
+                check_out_date=item['check_out_date'],
+                date_code=date_code_str
+            )
+            session.add(date_item)
+            session.flush()
+            date_code = date_item.date_code
+
         # Check if hotel with the same information already exists
         existing_hotel = session.query(Hotel).filter_by(
             name=item['name'],
-            stars=item['stars'],
-            rating=item['rating'],
-            review_count=item['review_count'],
-            distance_from_center=item['distance_from_center'],
             url=item['url']
         ).first()
 
@@ -93,8 +113,7 @@ class SaveHotelsToSQLite:
         # Check if price with the same value, date, and hotel ID already exists
         existing_price = session.query(PriceItem).filter_by(
             hotel_id=hotel_id,
-            check_in_date=item['check_in_date'],
-            check_out_date=item['check_out_date'],
+            date_code=date_code,
             min_price=item['min_price'],
             currency=item['currency']
         ).first()
@@ -103,8 +122,7 @@ class SaveHotelsToSQLite:
             # Create and add FactItem
             price_item = PriceItem(
                 hotel_id=hotel_id,
-                check_in_date=item['check_in_date'],
-                check_out_date=item['check_out_date'],
+                date_code=date_code,
                 min_price=item['min_price'],
                 currency=item['currency']
             )
@@ -119,6 +137,3 @@ class SaveHotelsToSQLite:
             session.close()
 
         return item
-
-    def close_spider(self, spider):
-        self.Session.close()

@@ -13,9 +13,10 @@ class HotelSpider(scrapy.Spider):
         url = "https://www.booking.com/dml/graphql"
 
         # Iterate through days
-        start_date = datetime(2023, 11, 20)
-        end_date = datetime(2023, 11, 21)
-
+        # start_date = datetime(2023, 11, 20)
+        start_date = datetime.now().date()
+        # end_date = datetime(2024, 11, 20)
+        end_date = start_date + timedelta(days=365)
         for current_date in range((end_date - start_date).days + 1):
 
             # Iterate through offsets

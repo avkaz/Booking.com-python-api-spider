@@ -22,16 +22,26 @@ class Hotel(DeclarativeBase):
     price_items = relationship('PriceItem', back_populates='hotel')
 
 
+class Dates(DeclarativeBase):
+    __tablename__ = 'dates'
+
+    date_code = Column(Integer, primary_key=True)
+    snapshot_date = Column(Date)
+    check_in_date = Column(Date)
+    check_out_date = Column(Date)
+
+    price_items = relationship('PriceItem', back_populates='dates')
+
+
 class PriceItem(DeclarativeBase):
     __tablename__ = 'prices'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    hotel_id = Column(Integer, ForeignKey('hotels.id'))
-    check_in_date = Column(Date)
-    check_out_date = Column(Date)
+    hotel_id = Column(Integer, ForeignKey('hotels.id'), primary_key=True)
+    date_code = Column(Integer, ForeignKey('dates.date_code'), primary_key=True)
     min_price = Column(Float)
     currency = Column(String)
 
     hotel = relationship('Hotel', back_populates='price_items')
+    dates = relationship('Dates', back_populates='price_items')
 
 
