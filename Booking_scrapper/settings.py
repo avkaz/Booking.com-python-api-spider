@@ -67,7 +67,7 @@ ROBOTSTXT_OBEY = True
 #DOWNLOADER_MIDDLEWARES = {
 #    "Booking_scrapper.middlewares.BookingScrapperDownloaderMiddleware": 543,
 #}
-SCRAPEOPS_API_KEY = '150f08f1-5b0c-4588-b1ab-d0d7e27ecbb7'
+SCRAPEOPS_API_KEY = 'secret'
 SCRAPEOPS_FAKE_BROWSER_HEADER_ENABLED = True
 SCRAPEOPS_FAKE_USER_AGENT_ENDPOINT = True
 
